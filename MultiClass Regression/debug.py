@@ -11,170 +11,170 @@ output_notebook()
 from typing import Union
 
 
-def get_p_j_given_x(x, Bj):
-    """Calculates P( y = j | x).
+# def get_p_j_given_x(x, Bj):
+#     """Calculates P( y = j | x).
 
-    Args:
-        x: N x M features
-        B: M features x K-1
+#     Args:
+#         x: N x M features
+#         B: M features x K-1
 
-    Returns:
-        np.ndarray: N x K-1 matrix with the probabilities of each observation
-        to be classified as a given category. 
-    """
-    numerator = np.exp(x @ Bj) # Returns N x K-1 Matrix
-    # Note: It is critical to sum over the axis because it is
-    # only within an observation that the probabilities must add up to 1.
-    denominator = (1 + 
-                    np.sum(np.exp(x @ Bj), axis = 1)).reshape(-1,1) # N Vector
+#     Returns:
+#         np.ndarray: N x K-1 matrix with the probabilities of each observation
+#         to be classified as a given category. 
+#     """
+#     numerator = np.exp(x @ Bj) # Returns N x K-1 Matrix
+#     # Note: It is critical to sum over the axis because it is
+#     # only within an observation that the probabilities must add up to 1.
+#     denominator = (1 + 
+#                     np.sum(np.exp(x @ Bj), axis = 1)).reshape(-1,1) # N Vector
     
-    return numerator / denominator
+#     return numerator / denominator
 
-def get_pK(x, Bj):
-    """Calculates P( y = K | x).
-    """    
-    denominator = (1 + np.sum(np.exp(x @ Bj), axis = 1)).reshape(-1,1)
-    return 1 / denominator
+# def get_pK(x, Bj):
+#     """Calculates P( y = K | x).
+#     """    
+#     denominator = (1 + np.sum(np.exp(x @ Bj), axis = 1)).reshape(-1,1)
+#     return 1 / denominator
 
-def get_L1_vector(x, yi, Bj):
-    """
-    Computes partial derivatives dL/dBj.
+# def get_L1_vector(x, yi, Bj):
+#     """
+#     Computes partial derivatives dL/dBj.
 
-        Assumes Bj is a row vector with K−1 entries and X is a column array.
+#         Assumes Bj is a row vector with K−1 entries and X is a column array.
 
-    Args:
-        xi (np.ndarray): Column vector or N observation x M features
-            matrix
-        yi (np.ndarray): Column vector with categorical data.
-        Bj (np.ndarray): Row vector
+#     Args:
+#         xi (np.ndarray): Column vector or N observation x M features
+#             matrix
+#         yi (np.ndarray): Column vector with categorical data.
+#         Bj (np.ndarray): Row vector
 
-    """
-    dL_dBj = []
+#     """
+#     dL_dBj = []
 
-    for category, bj in enumerate(Bj, start = 1):
+#     for category, bj in enumerate(Bj, start = 1):
 
-        term_1 = np.sum(x[yi == category])
-        denominator = np.ones(shape = x.shape)        
-        for i, xi in enumerate(x):
-            denominator[i] = (1 + np.sum(np.exp(xi * Bj))) # Vector Scaling
+#         term_1 = np.sum(x[yi == category])
+#         denominator = np.ones(shape = x.shape)        
+#         for i, xi in enumerate(x):
+#             denominator[i] = (1 + np.sum(np.exp(xi * Bj))) # Vector Scaling
     
-        numerator = x * np.exp(x * bj)
-        dL_dBj.append(term_1 - np.sum(numerator/denominator))
+#         numerator = x * np.exp(x * bj)
+#         dL_dBj.append(term_1 - np.sum(numerator/denominator))
 
-    return dL_dBj
+#     return dL_dBj
 
-def get_Lprime2_matrix(x, K, Bj):
-    """
-    Computes partial second derivatives d2L/dBj dBk.
+# def get_Lprime2_matrix(x, K, Bj):
+#     """
+#     Computes partial second derivatives d2L/dBj dBk.
 
-    Assumes Bj is a row vector with K−1 entries and X is a column array.
+#     Assumes Bj is a row vector with K−1 entries and X is a column array.
 
-    Args:
-        xi (np.ndarray): Column vector or N observation x M features
-            matrix
-        K (int): Number of categories or discrete values y can take
-            from 1 to K.
-        Bj (np.ndarray): Row vector with regression parameters.
+#     Args:
+#         xi (np.ndarray): Column vector or N observation x M features
+#             matrix
+#         K (int): Number of categories or discrete values y can take
+#             from 1 to K.
+#         Bj (np.ndarray): Row vector with regression parameters.
 
-    """
+#     """
  
-    l_prime2 = np.zeros(shape = (K-1, K-1)) # Matrix L2 is (j,k)
+#     l_prime2 = np.zeros(shape = (K-1, K-1)) # Matrix L2 is (j,k)
 
-    # Approach: 
-    #   Since x is a column vector and Bj is a row, vectorized operations make
-    #   more sense. 
-    #   The only explicit iteration 1:n is for the denominator.
-    denominator = np.ones(shape = x.shape)
+#     # Approach: 
+#     #   Since x is a column vector and Bj is a row, vectorized operations make
+#     #   more sense. 
+#     #   The only explicit iteration 1:n is for the denominator.
+#     denominator = np.ones(shape = x.shape)
 
-    for i, xi in enumerate(x):
-        denominator[i] = (1 + np.sum(np.exp(xi * Bj))) # Vector Scaling
+#     for i, xi in enumerate(x):
+#         denominator[i] = (1 + np.sum(np.exp(xi * Bj))) # Vector Scaling
     
-    # Note: symmetric matrix, we are esimating K-1 parameters
-    for j in range(K-1):
-        for k in range(0, K-1): #
+#     # Note: symmetric matrix, we are esimating K-1 parameters
+#     for j in range(K-1):
+#         for k in range(0, K-1): #
 
-            if j == k:
-                f = -1
-            else:
-                f = 0
+#             if j == k:
+#                 f = -1
+#             else:
+#                 f = 0
 
-            l_prime2[j, k] = f*np.sum(x**2*np.exp(x * Bj[j])/denominator) + \
-                    np.sum(x**2*np.exp(x * (Bj[j] + Bj[k]))/(denominator**2))
+#             l_prime2[j, k] = f*np.sum(x**2*np.exp(x * Bj[j])/denominator) + \
+#                     np.sum(x**2*np.exp(x * (Bj[j] + Bj[k]))/(denominator**2))
 
-    return l_prime2
+#     return l_prime2
 
-def newton_raphson(xArr, yArr, b_0, tolerance = 0.00001):
-    """
-    Performs Newton-Raphson root finding.
+# def newton_raphson(xArr, yArr, b_0, tolerance = 0.00001):
+#     """
+#     Performs Newton-Raphson root finding.
     
-    Args:
-        xArr (np.ndarray): Column array with x values.
-        yArr (np.ndarray): Column array with y values (discrete).
-        b_0 (float): Initial guess for regression parameters.
-        tolerance (float): Stops iteration when difference between iterations
-            is within tolerance.
-    """
+#     Args:
+#         xArr (np.ndarray): Column array with x values.
+#         yArr (np.ndarray): Column array with y values (discrete).
+#         b_0 (float): Initial guess for regression parameters.
+#         tolerance (float): Stops iteration when difference between iterations
+#             is within tolerance.
+#     """
 
-    k = len(b_0) + 1
-    difference = tolerance * 5
+#     k = len(b_0) + 1
+#     difference = tolerance * 5
     
-    beta_iter = [b_0]
-    while abs(difference) > tolerance:
+#     beta_iter = [b_0]
+#     while abs(difference) > tolerance:
         
-        L_1 = get_L1_vector(xArr, yArr, b_0)
-        L_2 = get_Lprime2_matrix(xArr, k, b_0)
-        beta_1 = b_0 - np.linalg.solve(L_2, L_1)
+#         L_1 = get_L1_vector(xArr, yArr, b_0)
+#         L_2 = get_Lprime2_matrix(xArr, k, b_0)
+#         beta_1 = b_0 - np.linalg.solve(L_2, L_1)
 
-        # Calculate difference and update iteration state
-        difference = max(abs(np.array(beta_1) - np.array(b_0)))
-        b_0 = beta_1
-        beta_iter.append(b_0)
+#         # Calculate difference and update iteration state
+#         difference = max(abs(np.array(beta_1) - np.array(b_0)))
+#         b_0 = beta_1
+#         beta_iter.append(b_0)
     
-    return beta_1, beta_iter
+#     return beta_1, beta_iter
 
-###############################################################################
-# Class illustration
+# ###############################################################################
+# # Class illustration
 
-# Initialization
-n = 10000
-x_i = np.random.normal(0, 1, size = (n,1))
-Bj = np.array([-0.2,0,0.2,0.4]).reshape(1,-1)
+# # Initialization
+# n = 10000
+# x_i = np.random.normal(0, 1, size = (n,1))
+# Bj = np.array([-0.2,0,0.2,0.4]).reshape(1,-1)
 
-# Probabilities j = 1 through K-1
-p_array_K_minus_one = get_p_j_given_x(x_i, Bj)
+# # Probabilities j = 1 through K-1
+# p_array_K_minus_one = get_p_j_given_x(x_i, Bj)
 
-# Probabilities j = K
-p_K = 1 - np.sum(p_array_K_minus_one, axis = 1).reshape(-1,1)
+# # Probabilities j = K
+# p_K = 1 - np.sum(p_array_K_minus_one, axis = 1).reshape(-1,1)
 
-# Same as doing
-p_K_v2 = get_pK(x_i, Bj)
-assert max(abs(p_K - p_K_v2)) < 10**-15
+# # Same as doing
+# p_K_v2 = get_pK(x_i, Bj)
+# assert max(abs(p_K - p_K_v2)) < 10**-15
 
-# Full array
-p_array = np.concatenate([p_array_K_minus_one, p_K], axis = 1)
+# # Full array
+# p_array = np.concatenate([p_array_K_minus_one, p_K], axis = 1)
 
-# Y values generation
-y_i = []
-for probabilities in p_array:
-    y_random = np.random.choice(a = [1,2,3,4,5], 
-                                size = 1,
-                                p = probabilities)
-    y_i.append(y_random[0])
-y_i = np.array(y_i)
-
-
-# Newon Raphson
-beta_1, beta_iter = newton_n_iter(x_i, y_i, np.array([-0.5,0.5,0.5,0.5]))
-print(beta_1)
+# # Y values generation
+# y_i = []
+# for probabilities in p_array:
+#     y_random = np.random.choice(a = [1,2,3,4,5], 
+#                                 size = 1,
+#                                 p = probabilities)
+#     y_i.append(y_random[0])
+# y_i = np.array(y_i)
 
 
-# n = np.random.normal(size = (10000,1))
-# beta = 
+# # Newon Raphson
+# beta_1, beta_iter = newton_n_iter(x_i, y_i, np.array([-0.5,0.5,0.5,0.5]))
+# print(beta_1)
 
-# df = pd.read_csv('data_1.csv')
-# beta_1, beta_iter = newton_n_iter(df.x.values, df.y.values, np.array([0.2, 0.3, 0.4]))
 
-# print()
+# # n = np.random.normal(size = (10000,1))
+# # beta = 
+
+# # df = pd.read_csv('data_1.csv')
+# # beta_1, beta_iter = newton_n_iter(df.x.values, df.y.values, np.array([0.2, 0.3, 0.4]))
+
+# # print()
 
 
 
@@ -194,3 +194,62 @@ print(beta_1)
 # expected = [[0.240544371, 0.240544371,	0.240544371, 0.240544371],
 #            [0.240544371, 0.240544371,	0.240544371, 0.240544371]]
 # assert np.max(abs(get_p_j_given_x(x_i,Bj) - expected)) < 10**-8
+
+
+beta = 0.1
+x = np.array([0, 1,2,3,4,5,6,7])
+
+def log_likelihood(beta, x):
+    
+    total = 0
+    for idx, xi in enumerate(x):        
+        total += xi*beta - np.log( np.sum(np.exp(x[idx:]*beta)))
+    return total
+
+print(log_likelihood(beta, x))
+
+
+def get_Lprime(x, beta):
+    total = 0
+    for idx, xi in enumerate(x):        
+        total += (xi - np.sum(x[idx:]*np.exp(x[idx:]*beta)) /  np.sum(np.exp(x[idx:]*beta)))
+    return total
+
+def get_Lprime2(x, beta):
+    total = 0
+    for idx, xi in enumerate(x): 
+        term_1 = np.sum((x[idx:]**2)*np.exp(x[idx:]*beta)) /  np.sum(np.exp(x[idx:]*beta))
+        term2 = np.sum(x[idx:]*np.exp(x[idx:]*beta)) /  np.sum(np.exp(x[idx:]*beta))**2
+        
+        total += (-term_1 + term2)
+    return total
+
+def newton_raphson(xArr, b0, tolerance = 0.00001):
+    """
+    Performs Newton-Raphson root finding.
+    
+    Args:
+        xArr (np.ndarray): Column array with x values.
+        yArr (np.ndarray): Column array with y values (discrete).
+        b_0 (float): Initial guess for regression parameters.
+        tolerance (float): Stops iteration when difference between iterations
+            is within tolerance.
+    """
+
+ 
+    difference = tolerance * 5
+    
+    beta_iter = [b0]
+    while abs(difference) > tolerance:
+        
+        f = get_Lprime(xArr, b0)         
+        f_prime = get_Lprime2(xArr, b0)    
+        b = b0 - (f / f_prime)
+
+        # calculate difference and update iteration state
+        difference = abs(b-b0)
+        b0 = b
+
+        beta_iter.append(b0)
+    
+    return b, beta_iter

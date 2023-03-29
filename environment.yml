@@ -1,0 +1,17 @@
+name: 
+  - pm3env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - libpython
+  - blas
+  - mkl-service
+  - m2w64-toolchain
+  - numba
+  - pip
+  - python=3.8
+  - python-graphviz
+  - scipy
+  - pip:
+    - pymc3
